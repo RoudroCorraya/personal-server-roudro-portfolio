@@ -28,7 +28,23 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const userCollection = client.db('UsersCollection').collection('user');
-
+    app.get('/', (req, res)=>{
+      res.send('userport is running');
+  
+  })
+    app.post('/users', async(req, res)=>{
+      const user = req.body;
+      console.log('newuser', user);
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+      
+  })
+  app.get('/users', async(req, res)=>{
+    const query = {};
+    const cursor = userCollection.find(query);
+    const users = await cursor.toArray();
+    res.send(users);
+  })
 
     
     // Send a ping to confirm a successful connection
@@ -41,16 +57,8 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get('/', (req, res)=>{
-    res.send('userport is running');
-})
-app.post('/users', async(req, res)=>{
-    const user = req.body;
-    console.log('newuser', user);
-    const result = await userCollection.insertOne(user);
-    res.send(result);
-    
-})
+
+
 
 app.listen(port, ()=>{
     console.log(`server is running on PORT: ${port}`)
