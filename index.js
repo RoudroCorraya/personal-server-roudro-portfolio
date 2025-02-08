@@ -39,7 +39,7 @@ async function run() {
       res.send(result);
       
   })
-  app.get('/users', async(req, res)=>{
+  app.get('/dashboard/users', async(req, res)=>{
     const query = {};
     const cursor = userCollection.find(query);
     const users = await cursor.toArray();
