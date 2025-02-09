@@ -29,6 +29,7 @@ async function run() {
     await client.connect();
     const userCollection = client.db('UsersCollection').collection('user');
     const letsTalkCollection = client.db('userQuery').collection('letsTalkQuery');
+    const addSeerviceCollection = client.db('addService').collection('services');
     app.get('/', (req, res) => {
       res.send('userport is running');
 
@@ -41,6 +42,12 @@ async function run() {
 
       
   })
+  app.get('/users', async (req, res) => {
+    const query = {};
+    const cursor = userCollection.find(query);
+    const users = await cursor.toArray();
+    res.send(users);
+  })
   app.get('/dashboard/users', async(req, res)=>{
     const query = {};
     const cursor = userCollection.find(query);
@@ -49,13 +56,9 @@ async function run() {
   })
 
 
+
   
-    app.get('/users', async (req, res) => {
-      const query = {};
-      const cursor = userCollection.find(query);
-      const users = await cursor.toArray();
-      res.send(users);
-    })
+    
     //lets talk server start
     app.post('/letstalk', async (req, res) => {
       const letsTalkQuery = req.body;
@@ -63,7 +66,7 @@ async function run() {
       const result = await letsTalkCollection.insertOne(letsTalkQuery);
       res.send(result);
     })
-    app.get('/letstalk', async(req, res) =>{
+    app.get('/dashboard/letstalk', async(req, res) =>{
       const  query = {};
       const cursor = letsTalkCollection.find(query);
       const userQuery = await cursor.toArray();
@@ -71,6 +74,21 @@ async function run() {
     })
     //lets talk server end
 
+
+    //add service server start
+    app.post('/dashboard/addservice', async(req, res)=>{
+      const addService = req.body;
+      console.log('addService data post', addService);
+      const result = await addSeerviceCollection.insertOne(addService);
+      res.send(result); 
+    })
+    app.get('/services', async(req, res)=>{
+      const query = {};
+      const cursor = addSeerviceCollection.find(query);
+      const addedServices = await cursor.toArray();
+      res.send(addedServices);
+    })
+    //add service server end
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
