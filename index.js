@@ -11,7 +11,7 @@ app.use(express.json());
 //username:"roudrocorraya307"
 //password: "Za92dDD8Su4w2oQw"
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://roudrocorraya307:Za92dDD8Su4w2oQw@cluster0.ggrhl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -89,6 +89,17 @@ async function run() {
       res.send(addedServices);
     })
     //add service server end
+
+
+
+    //get single service start
+    app.get('/servicedetails/:_id', async(req, res)=>{
+      const _id = req.params._id;
+      const query = {_id: new ObjectId(_id)};
+      const getService = await addSeerviceCollection.findOne(query);
+      res.send(getService);
+    })
+    //get single service end
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
