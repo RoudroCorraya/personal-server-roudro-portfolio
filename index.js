@@ -30,6 +30,7 @@ async function run() {
     const userCollection = client.db('UsersCollection').collection('user');
     const letsTalkCollection = client.db('userQuery').collection('letsTalkQuery');
     const addSeerviceCollection = client.db('addService').collection('services');
+    const addProjectCollection = client.db('AllProjects').collection('Projects');
     app.get('/', (req, res) => {
       res.send('userport is running');
 
@@ -100,6 +101,27 @@ async function run() {
       res.send(getService);
     })
     //get single service end
+    
+    //add project start
+    app.post('/dashboard/addproject', async(req, res)=>{
+      const addProject = req.body;
+      console.log('addProject', addProject);
+      const result = await addProjectCollection.insertOne(addProject);
+      res.send(result);
+    })
+    app.get('/allprojects', async(req, res)=>{
+      const query = {};
+      const cursor = addProjectCollection.find(query);
+      const addProject = await cursor.toArray();
+      res.send(addProject);
+    })
+    app.get('/allprojects/:projecttype', async(req, res)=>{
+      const projectType = req.params.projecttype;
+      const query = {projectType};
+      const getPrjects = await addProjectCollection.find(query).toArray();
+      res.send(getPrjects);
+    })
+    //add project end
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
