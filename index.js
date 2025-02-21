@@ -31,6 +31,7 @@ async function run() {
     const letsTalkCollection = client.db('userQuery').collection('letsTalkQuery');
     const addSeerviceCollection = client.db('addService').collection('services');
     const addProjectCollection = client.db('AllProjects').collection('Projects');
+    const HomeContactCollection = client.db('HomeContact').collection('Contact');
     const addBlogCollection = client.db('AllBlogs').collection('Blogs');
     app.get('/', (req, res) => {
       res.send('userport is running');
@@ -144,6 +145,21 @@ async function run() {
       res.send(getBlog);
     })
     //add blog end
+
+    //homeContact start
+    app.post('/homecontact', async(req, res)=>{
+      const homeContact = req.body;
+      console.log('home contact post', homeContact);
+      const result = await HomeContactCollection.insertOne(homeContact);
+      res.send(result);
+    })
+    app.get('/homecontact', async(req, res)=>{
+      const query = {};
+      const cursor = HomeContactCollection.find(query);
+      const contactInfo = await cursor.toArray();
+      res.send(contactInfo);
+    })
+    //homeContact end
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
