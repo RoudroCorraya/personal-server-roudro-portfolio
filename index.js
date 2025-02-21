@@ -31,6 +31,7 @@ async function run() {
     const letsTalkCollection = client.db('userQuery').collection('letsTalkQuery');
     const addSeerviceCollection = client.db('addService').collection('services');
     const addProjectCollection = client.db('AllProjects').collection('Projects');
+    const addBlogCollection = client.db('AllBlogs').collection('Blogs');
     app.get('/', (req, res) => {
       res.send('userport is running');
 
@@ -122,6 +123,27 @@ async function run() {
       res.send(getPrjects);
     })
     //add project end
+
+    //add blog start
+    app.post('/dashboard/addblog', async(req, res)=>{
+      const blogs = req.body;
+      console.log('blog added', blogs);
+      const result = await addBlogCollection.insertOne(blogs);
+      res.send(result);
+    })
+    app.get('/allblogs', async(req, res)=>{
+      const query = {};
+      const cursor = addBlogCollection.find(query);
+      const allBlogs = await cursor.toArray();
+      res.send(allBlogs);
+    })
+    app.get('/blogs/:_id', async(req, res)=>{
+      const _id = req.params._id;
+      const query = {_id: new ObjectId(_id)};
+      const getBlog = await addBlogCollection.find(query).toArray();
+      res.send(getBlog);
+    })
+    //add blog end
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
