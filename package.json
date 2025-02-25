@@ -11,9 +11,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "mongodb": "^6.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.13.1",
     "mongoose": "^8.9.6",
     "react-scripts": "^5.0.1"
   }
