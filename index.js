@@ -1,12 +1,18 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const cookie_parser = require('cookie-parser');
 
+
+
 const app = express();
 const port = process.env.PORT || 5000;
 //midleware 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookie_parser());
 // app.use("http://localhost:5000/", require("./routes/userRoutes"));
@@ -45,6 +51,7 @@ async function run() {
     app.post('/users', async (req, res) => {
       const user = req.body;
       console.log('newuser', user);
+     
       const result = await userCollection.insertOne(user);
       res.send(result);
 
@@ -53,7 +60,9 @@ async function run() {
     app.get('/users', async (req, res) => {
       const query = {};
       const cursor = userCollection.find(query);
+
       const users = await cursor.toArray();
+      console.log('cooke', req.cookies);
       res.send(users);
     })
     app.get('/dashboard/users', async (req, res) => {
@@ -203,23 +212,37 @@ async function run() {
     //user make admin end
     //call info funcution start
 
-    // app.put('/call/:id', async (req, res) => {
-    //   const _id = req.params.id;
-    //   const Callinfo = req.body;
-    //   console.log('call info updated', _id, Callinfo);
-    //   const filter = { _id: new ObjectId(_id) };
-    //   const options = { upsert: true };
-    //   const updateCallInfo = {
-    //     $set: {
-    //       callInfo: "done"
-    //     }
-    //   }
-    //   const result = await letsTalkCollection.updateOne(filter, updateCallInfo, options);
-    //   res.send(result);
-    // })
+    app.put('/call/:id', async (req, res) => {
+      const _id = req.params.id;
+      const Callinfo = req.body;
+      console.log('call info updated', _id, Callinfo);
+      const filter = { _id: new ObjectId(_id) };
+      const options = { upsert: true };
+      const updateCallInfo = {
+        $set: {
+          callInfo: "done"
+        }
+      }
+      const result = await letsTalkCollection.updateOne(filter, updateCallInfo, options);
+      res.send(result);
+    })
     
 
     //call info funcution end
+    
+    //jwt token start
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1h' });
+
+      res
+      .cookie('token', token, {
+        httpOnly: true,
+        secure: false
+      })
+      .send({success: true});
+    })
+    //jwt token end
 
     //header user admin role start
     // app.get('/users/:email', async(req, res)=>{
