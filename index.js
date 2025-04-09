@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const cookie_parser = require('cookie-parser');
+
+const cookieParser = require('cookie-parser');
 
 
 
@@ -13,15 +14,23 @@ app.use(cors({
   origin: ['http://localhost:3000'],
   credentials: true
 }));
+// app.use(cors({
+//   origin: 'http://localhost:3000',
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
+// }));
+
 app.use(express.json());
-app.use(cookie_parser());
+app.use(cookieParser());
+
 // app.use("http://localhost:5000/", require("./routes/userRoutes"));
 
 //username:"roudrocorraya307"
 //password: "Za92dDD8Su4w2oQw"
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const cookieParser = require('cookie-parser');
+
 const uri = "mongodb+srv://roudrocorraya307:Za92dDD8Su4w2oQw@cluster0.ggrhl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -32,7 +41,43 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  console.log('authHeader from server veriyfy fiunctuiion', authHeader);
 
+  if (!authHeader) {
+    return res.status(401).send({ message: 'Unauthorized access, no token' });
+  }
+
+  const token = authHeader.split(' ')[1]; // Bearer <token>
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({ message: 'Forbidden access, token invalid' });
+    }
+
+    req.user = decoded;
+    next();
+  });
+};
+
+
+// const verifyToken = (req, res, next) => {
+//   console.log('req.cookie check', req.cookies);
+//   const token = req?.cookies?.token;
+//   console.log('ussers url hit got token',token);
+//   if(!token){
+//     return res.status(401).send({message: 'unauthorized access no token'})
+//   }
+//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded)=>{
+//     if(err){
+//       return res.status(403).send({message: 'forbiden access token not match'})
+//     }
+//     console.log('req.cookies check', req.cookie);
+
+//     req.user = decoded;
+//     next();
+//   })
+// }
 
 async function run() {
   try {
@@ -51,25 +96,24 @@ async function run() {
     app.post('/users', async (req, res) => {
       const user = req.body;
       console.log('newuser', user);
-     
+
       const result = await userCollection.insertOne(user);
       res.send(result);
 
 
     })
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyToken,  async (req, res) => {
       const query = {};
       const cursor = userCollection.find(query);
 
       const users = await cursor.toArray();
-      console.log('cooke', req.cookies);
+      
       res.send(users);
     })
-    app.get('/dashboard/users', async (req, res) => {
-      const query = {};
-      const cursor = userCollection.find(query);
-      const users = await cursor.toArray();
-      res.send(users);
+    app.get('/dashboard/users',  async (req, res) => {
+      
+      const cookies = req.cookies.token;
+      console.log('dashboard/users cookie', cookies);
     })
 
 
@@ -99,7 +143,7 @@ async function run() {
       const result = await addSeerviceCollection.insertOne(addService);
       res.send(result);
     })
-    app.get('/services', async (req, res) => {
+    app.get('/services',  async (req, res) => {
       const query = {};
       const cursor = addSeerviceCollection.find(query);
       const addedServices = await cursor.toArray();
@@ -110,7 +154,7 @@ async function run() {
 
 
     //get single service start
-    app.get('/servicedetails/:_id', async (req, res) => {
+    app.get('/servicedetails/:_id',  async (req, res) => {
       const _id = req.params._id;
       const query = { _id: new ObjectId(_id) };
       const getService = await addSeerviceCollection.findOne(query);
@@ -125,13 +169,13 @@ async function run() {
       const result = await addProjectCollection.insertOne(addProject);
       res.send(result);
     })
-    app.get('/allprojects', async (req, res) => {
+    app.get('/allprojects',   async (req, res) => {
       const query = {};
       const cursor = addProjectCollection.find(query);
       const addProject = await cursor.toArray();
       res.send(addProject);
     })
-    app.get('/allprojects/:projecttype', async (req, res) => {
+    app.get('/allprojects/:projecttype',  async (req, res) => {
       const projectType = req.params.projecttype;
       const query = { projectType };
       const getPrjects = await addProjectCollection.find(query).toArray();
@@ -146,13 +190,13 @@ async function run() {
       const result = await addBlogCollection.insertOne(blogs);
       res.send(result);
     })
-    app.get('/allblogs', async (req, res) => {
+    app.get('/allblogs',  async (req, res) => {
       const query = {};
       const cursor = addBlogCollection.find(query);
       const allBlogs = await cursor.toArray();
       res.send(allBlogs);
     })
-    app.get('/blogs/:_id', async (req, res) => {
+    app.get('/blogs/:_id',  async (req, res) => {
       const _id = req.params._id;
       const query = { _id: new ObjectId(_id) };
       const getBlog = await addBlogCollection.find(query).toArray();
@@ -176,11 +220,11 @@ async function run() {
     //homeContact end
 
     // user make admin start
-    app.patch('/user/admin/:_id', async(req, res)=>{
+    app.patch('/user/admin/:_id', async (req, res) => {
       const _id = req.params._id;
-      const filter = {_id : new ObjectId(_id)};
+      const filter = { _id: new ObjectId(_id) };
       const updateDoc = {
-        $set:{
+        $set: {
           role: 'admin'
         }
       };
@@ -192,23 +236,23 @@ async function run() {
     //   console.log('server email cheak', email);
     //   const query = {email : email};
     //   const result = await userCollection.findOne(query);
-      
+
     //   console.log('database check', result);
     //   res.send(result);
     // })
-    app.get('/admin/users/:email', async (req, res) => {
+    app.get('/admin/users/:email',  async (req, res) => {
       const email = req.params.email;
       console.log('Fetching user with id:', email);
-    
-      const query = { "user.email": email};
+
+      const query = { "user.email": email };
       const result = await userCollection.findOne(query);
-    
-     res.send(result);
-     
+
+      res.send(result);
+
     });
-    
-   
-    
+
+
+
     //user make admin end
     //call info funcution start
 
@@ -226,23 +270,45 @@ async function run() {
       const result = await letsTalkCollection.updateOne(filter, updateCallInfo, options);
       res.send(result);
     })
-    
+
 
     //call info funcution end
-    
+
     //jwt token start
+    // app.post('/jwt', async (req, res) => {
+    //   const user = req.body;
+    //   const JWT_SECRET = process.env.JWT_SECRET;
+    //   console.log("JWT_SECRET:", process.env.JWT_SECRET); 
+    //   console.log("users req.body", user); 
+    //   const token = jwt.sign(user, JWT_SECRET, { expiresIn: '6h' });
+
+    //   res.cookie('token', token, {
+    //       httpOnly: true,
+    //       secure: false,
+    //       sameSite: 'None'
+          
+          
+    //     });
+    //     console.log('cookei header sent', token);
+    //     res.send({ success: true });
+    // })
+    //localstorege try jwt instead cookie start
     app.post('/jwt', async(req, res)=>{
       const user = req.body;
-      const token = jwt.sign(user, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1h' });
-
-      res
-      .cookie('token', token, {
-        httpOnly: true,
-        secure: false
-      })
-      .send({success: true});
+      const JWT_SECRET = process.env.JWT_SECRET;
+      console.log('from jwt post url hit ', JWT_SECRET);
+      const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '6h'});
+      res.send({token});
     })
+    //localstorege try jwt instead cookie end
     //jwt token end
+
+    //jwt cookie remove start
+    app.post('/logout', (req, res)=>{
+      res.clearCookie('token', {httpOnly: true, secure: true})
+      res.send({success: true});
+    })
+    //jwt cookie remove end
 
     //header user admin role start
     // app.get('/users/:email', async(req, res)=>{
