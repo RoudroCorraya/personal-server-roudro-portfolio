@@ -121,12 +121,24 @@ async function run() {
 
 
     //lets talk server start
+    // app.post('/letstalk', async (req, res) => {
+    //   const letsTalkQuery = req.body;
+    //   console.log('letsTalkQuery', letsTalkQuery);
+    //   const result = await letsTalkCollection.insertOne(letsTalkQuery);
+    //   res.send(result);
+    // })
     app.post('/letstalk', async (req, res) => {
       const letsTalkQuery = req.body;
+    
+      if (letsTalkQuery.preferredDate) {
+        letsTalkQuery.preferredDate = new Date(letsTalkQuery.preferredDate);
+      }
+    
       console.log('letsTalkQuery', letsTalkQuery);
       const result = await letsTalkCollection.insertOne(letsTalkQuery);
       res.send(result);
-    })
+    });
+    
     app.get('/dashboard/letstalk', async (req, res) => {
       const query = {};
       const cursor = letsTalkCollection.find(query);
